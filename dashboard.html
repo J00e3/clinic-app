@@ -33,7 +33,7 @@
         </div>
         <div class="stat-box">
           <p>Active Departments</p>
-          <div class="stat-num" id="dept-count">3</div>
+          <div class="stat-num" id="dept-count">4</div>
         </div>
       </div>
 
@@ -45,7 +45,6 @@
   </main>
 
   <script>
-    // Simple Auth check
     if (!sessionStorage.getItem('isLoggedIn')) {
       window.location.href = 'login.html';
     }
@@ -55,12 +54,8 @@
       window.location.href = 'login.html';
     });
 
-    // Load total count
-    fetch('/api/appointments')
-      .then(r => r.json())
-      .then(data => {
-        document.getElementById('total-count').textContent = data.length;
-      });
+    const records = JSON.parse(localStorage.getItem('clinic_records') || '[]');
+    document.getElementById('total-count').textContent = records.length;
   </script>
 </body>
 </html>
