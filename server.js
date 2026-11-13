@@ -8,23 +8,8 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(__dirname));
 
-// In-memory shared appointments storage (shared live across all devices)
-let sharedAppointments = [
-  {
-    id: 1700000001,
-    patientName: "Sarah Ahmed",
-    phone: "01012345678",
-    department: "General Medicine",
-    date: "2026-11-20",
-    time: "10:30",
-    hasChronic: true,
-    chronicCondition: "Diabetes (السكري)",
-    hasPrescription: true,
-    prescriptionDetails: "Metformin 500mg, twice daily",
-    prescriptionImage: "",
-    notes: "Follow-up consultation."
-  }
-];
+// Empty by default — NO fake records!
+let sharedAppointments = [];
 
 // Explicit page routes
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
@@ -35,7 +20,7 @@ app.get('/list.html', (req, res) => res.sendFile(path.join(__dirname, 'list.html
 app.get('/style.css', (req, res) => res.sendFile(path.join(__dirname, 'style.css')));
 app.get('/report.html', (req, res) => res.sendFile(path.join(__dirname, 'report.html')));
 
-// API: Get all appointments (Accessible from PC, Phone, etc.)
+// API: Get all appointments
 app.get('/api/appointments', (req, res) => {
   res.json(sharedAppointments);
 });
