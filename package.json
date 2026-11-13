@@ -1,0 +1,12 @@
+{
+  "name": "clinic-records",
+  "version": "1.0.0",
+  "description": "Simple Accessible Clinic Records System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

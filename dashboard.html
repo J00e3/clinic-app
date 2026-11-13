@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Clinic System</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <header role="banner">
+    <nav aria-label="Main Navigation">
+      <a href="dashboard.html" class="logo">Clinic Portal</a>
+      <ul>
+        <li><a href="dashboard.html" aria-current="page">Dashboard</a></li>
+        <li><a href="book.html">Book Appointment</a></li>
+        <li><a href="list.html">View Appointments</a></li>
+        <li><button id="logout-btn" class="btn btn-secondary" style="padding:0.4rem 0.8rem; font-size:0.9rem;">Sign Out</button></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <div class="card">
+      <h1>Receptionist Dashboard</h1>
+      <p class="subtitle">Welcome to the clinic management system.</p>
+
+      <div class="dash-grid" aria-label="Summary statistics">
+        <div class="stat-box">
+          <p>Total Appointments</p>
+          <div class="stat-num" id="total-count">0</div>
+        </div>
+        <div class="stat-box">
+          <p>Active Departments</p>
+          <div class="stat-num" id="dept-count">3</div>
+        </div>
+      </div>
+
+      <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+        <a href="book.html" class="btn">Book New Appointment</a>
+        <a href="list.html" class="btn btn-secondary">View & Search Records</a>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Simple Auth check
+    if (!sessionStorage.getItem('isLoggedIn')) {
+      window.location.href = 'login.html';
+    }
+
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      sessionStorage.removeItem('isLoggedIn');
+      window.location.href = 'login.html';
+    });
+
+    // Load total count
+    fetch('/api/appointments')
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById('total-count').textContent = data.length;
+      });
+  </script>
+</body>
+</html>

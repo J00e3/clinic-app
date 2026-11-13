@@ -1,0 +1,219 @@
+/* Simple, Accessible, High-Contrast CSS */
+:root {
+  --primary: #0f3d64;
+  --primary-hover: #17548a;
+  --bg: #f4f7f9;
+  --text: #1a202c;
+  --white: #ffffff;
+  --border: #cbd5e1;
+  --focus: #0056b3;
+  --error: #b91c1c;
+  --error-bg: #fee2e2;
+  --success: #15803d;
+  --success-bg: #dcfce7;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--text);
+  background-color: var(--bg);
+  line-height: 1.6;
+  padding: 0;
+}
+
+/* Accessibility: High-contrast focus outline */
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Skip link for screen readers */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 10px;
+  background: var(--primary);
+  color: var(--white);
+  padding: 10px 15px;
+  z-index: 100;
+  text-decoration: none;
+}
+.skip-link:focus { top: 10px; }
+
+/* Navigation Bar */
+header {
+  background: var(--primary);
+  color: var(--white);
+  padding: 1rem 2rem;
+}
+nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+.logo { font-size: 1.4rem; font-weight: bold; color: var(--white); text-decoration: none; }
+nav ul { list-style: none; display: flex; gap: 1rem; }
+nav a {
+  color: var(--white);
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+}
+nav a:hover, nav a[aria-current="page"] {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Container */
+main {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.card {
+  background: var(--white);
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  margin-bottom: 2rem;
+}
+
+h1 { font-size: 1.8rem; margin-bottom: 0.5rem; color: var(--primary); }
+p.subtitle { color: #555; margin-bottom: 1.5rem; }
+
+/* Form Fields */
+.form-group {
+  margin-bottom: 1.25rem;
+}
+label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+input[type="text"],
+input[type="tel"],
+input[type="password"],
+input[type="date"],
+select,
+textarea {
+  width: 100%;
+  padding: 0.65rem;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+/* Normal visible calendar icon + pointer cursor */
+input[type="date"] {
+  cursor: pointer;
+}
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+}
+
+input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+}
+
+/* Buttons */
+.btn {
+  display: inline-block;
+  background: var(--primary);
+  color: var(--white);
+  padding: 0.7rem 1.4rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+.btn:hover { background: var(--primary-hover); }
+.btn-secondary {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+.btn-secondary:hover { background: #cbd5e1; }
+.btn-danger {
+  background: #dc2626;
+  color: #fff;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+}
+.btn-danger:hover { background: #b91c1c; }
+
+/* Alerts */
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  display: none;
+}
+.alert-error {
+  background: var(--error-bg);
+  color: var(--error);
+  border: 1px solid var(--error);
+}
+.alert-success {
+  background: var(--success-bg);
+  color: var(--success);
+  border: 1px solid var(--success);
+}
+
+/* Table */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+th, td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+th {
+  background: #e2e8f0;
+  cursor: pointer;
+  user-select: none;
+}
+th:hover { background: #cbd5e1; }
+tr:hover { background: #f8fafc; }
+
+/* Dynamic Prescription Box */
+#prescription-box {
+  display: none;
+  background: #f1f5f9;
+  padding: 1rem;
+  border-radius: 6px;
+  border-left: 4px solid var(--primary);
+  margin-top: 0.5rem;
+}
+
+/* Dashboard Cards */
+.dash-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+.stat-box {
+  background: #e0f2fe;
+  border-left: 5px solid var(--primary);
+  padding: 1.5rem;
+  border-radius: 6px;
+}
+.stat-num { font-size: 2.2rem; font-weight: bold; color: var(--primary); }
