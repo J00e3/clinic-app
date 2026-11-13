@@ -16,6 +16,8 @@
         <li><a href="dashboard.html">Dashboard</a></li>
         <li><a href="book.html">Book Appointment</a></li>
         <li><a href="list.html" aria-current="page">View Appointments</a></li>
+        <li><button type="button" id="theme-btn" class="a11y-btn" title="Toggle High Contrast / Dark Mode">🌓 Contrast</button></li>
+        <li><button type="button" id="font-btn" class="a11y-btn" title="Toggle Larger Text Size">A+ Text</button></li>
       </ul>
     </nav>
   </header>
@@ -23,48 +25,85 @@
   <main id="main-content">
     <div class="card">
       <h1>Appointments List</h1>
-      <p class="subtitle">Search, sort, and manage patient records.</p>
+      <p class="subtitle">Search, filter by date & time, and manage patient records.</p>
 
-      <div style="display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem;">
-        <div style="flex:1; min-width:200px;">
-          <label for="search">Search by patient name</label>
-          <input type="text" id="search" placeholder="Type name to filter...">
+      <!-- Advanced Filter Controls -->
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:0.75rem; margin-bottom:1.25rem;">
+        <div>
+          <label for="search">Search Patient Name</label>
+          <input type="text" id="search" placeholder="Type to search...">
         </div>
-        <div style="flex:1; min-width:200px;">
-          <label for="dept-filter">Filter by department</label>
+        <div>
+          <label for="dept-filter">Department</label>
           <select id="dept-filter">
             <option value="">All Departments</option>
             <option value="General Medicine">General Medicine</option>
             <option value="Dental">Dental</option>
             <option value="Cardiology">Cardiology</option>
             <option value="Pediatrics">Pediatrics</option>
+            <option value="Orthopedics">Orthopedics</option>
           </select>
+        </div>
+        <div>
+          <label for="date-filter">Filter by Date</label>
+          <input type="date" id="date-filter">
+        </div>
+        <div style="display:flex; align-items:flex-end;">
+          <button type="button" id="clear-filters" class="btn btn-secondary" style="height:42px; width:100%;">Clear Filters</button>
         </div>
       </div>
 
-      <p id="counter" aria-live="polite" style="font-weight:600; color:#555;"></p>
+      <p id="counter" aria-live="polite" style="font-weight:600; color:var(--text-muted); font-size:0.9rem; margin-bottom:0.5rem;"></p>
 
+      <!-- Accessible Table -->
       <table aria-label="Patient Appointments Table">
         <thead>
           <tr>
             <th scope="col" id="col-name" tabindex="0" role="columnheader">Patient Name ⇅</th>
             <th scope="col">Phone</th>
             <th scope="col" id="col-dept" tabindex="0" role="columnheader">Department ⇅</th>
-            <th scope="col" id="col-date" tabindex="0" role="columnheader">Date ⇅</th>
-            <th scope="col">Prescription</th>
+            <th scope="col" id="col-date" tabindex="0" role="columnheader">Date & Time ⇅</th>
+            <th scope="col">Chronic Condition</th>
+            <th scope="col">Prescription / Attachment</th>
             <th scope="col">Actions</th>
           </tr>
         </thead>
-        <tbody id="table-body">
-        </tbody>
+        <tbody id="table-body"></tbody>
       </table>
     </div>
   </main>
+
+  <!-- Modal for viewing uploaded prescription image -->
+  <div class="modal-overlay" id="img-modal" role="dialog" aria-modal="true" aria-label="Prescription Image Viewer">
+    <div class="modal-img-card">
+      <h2 style="font-size:1.1rem; margin-bottom:0.75rem; color:var(--primary);">Prescription Attachment</h2>
+      <img id="modal-img" src="" alt="Uploaded Prescription Image">
+      <div style="margin-top:1rem;">
+        <button type="button" id="close-modal" class="btn btn-secondary">Close Viewer</button>
+      </div>
+    </div>
+  </div>
 
   <script>
     if (!sessionStorage.getItem('isLoggedIn')) {
       window.location.href = 'login.html';
     }
+
+    // Accessibility Theme Toggles
+    const themeBtn = document.getElementById('theme-btn');
+    const fontBtn = document.getElementById('font-btn');
+
+    if (localStorage.getItem('theme_dark') === 'true') document.body.classList.add('dark-mode');
+    if (localStorage.getItem('theme_large') === 'true') document.body.classList.add('large-text');
+
+    themeBtn.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      localStorage.setItem('theme_dark', document.body.classList.contains('dark-mode'));
+    });
+    fontBtn.addEventListener('click', () => {
+      document.body.classList.toggle('large-text');
+      localStorage.setItem('theme_large', document.body.classList.contains('large-text'));
+    });
 
     let allAppointments = [];
     let sortDirection = 1;
@@ -77,36 +116,63 @@
     function renderTable() {
       const search = document.getElementById('search').value.toLowerCase();
       const dept = document.getElementById('dept-filter').value;
+      const dateVal = document.getElementById('date-filter').value;
 
       const filtered = allAppointments.filter(item => {
         const matchesName = (item.patientName || '').toLowerCase().includes(search);
         const matchesDept = !dept || item.department === dept;
-        return matchesName && matchesDept;
+        const matchesDate = !dateVal || item.date === dateVal;
+        return matchesName && matchesDept && matchesDate;
       });
 
-      document.getElementById('counter').textContent = `Showing ${filtered.length} appointment(s)`;
+      document.getElementById('counter').textContent = `Showing ${filtered.length} of ${allAppointments.length} appointment(s)`;
 
       const tbody = document.getElementById('table-body');
       tbody.innerHTML = '';
 
       if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem; color:#64748b;">No appointments found. Click "Book Appointment" to add one!</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:2rem; color:var(--text-muted);">No matching appointments found.</td></tr>';
         return;
       }
 
       filtered.forEach(item => {
         const tr = document.createElement('tr');
+        
+        // Chronic condition badge
+        const chronicHtml = item.hasChronic && item.chronicCondition !== 'None'
+          ? `<span class="badge badge-chronic">⚡ ${escapeHtml(item.chronicCondition)}</span>`
+          : `<span style="color:var(--text-muted);">None</span>`;
+
+        // Prescription & Image button
+        let rxHtml = item.hasPrescription && item.prescriptionDetails 
+          ? escapeHtml(item.prescriptionDetails) 
+          : `<span style="color:var(--text-muted);">None</span>`;
+        
+        if (item.prescriptionImage) {
+          rxHtml += `<br><button class="badge badge-photo btn-small" style="margin-top:0.3rem;" onclick="viewPhoto('${item.id}')">📎 View Photo</button>`;
+        }
+
+        const timeStr = item.time ? ` at ${item.time}` : '';
+
         tr.innerHTML = `
-          <td><strong>${item.patientName}</strong></td>
-          <td>${item.phone}</td>
-          <td>${item.department}</td>
-          <td>${item.date}</td>
-          <td>${item.hasPrescription ? (item.prescriptionDetails || 'Prescribed') : 'None'}</td>
+          <td><strong>${escapeHtml(item.patientName)}</strong></td>
+          <td>${escapeHtml(item.phone)}</td>
+          <td>${escapeHtml(item.department)}</td>
+          <td>${escapeHtml(item.date)}${timeStr}</td>
+          <td>${chronicHtml}</td>
+          <td>${rxHtml}</td>
           <td>
             <button class="btn btn-danger" onclick="deleteItem(${item.id})">Cancel</button>
           </td>
         `;
         tbody.appendChild(tr);
+      });
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>"']/g, function (m) {
+        return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m];
       });
     }
 
@@ -117,24 +183,45 @@
       renderTable();
     }
 
+    // Photo viewer modal
+    const modal = document.getElementById('img-modal');
+    const modalImg = document.getElementById('modal-img');
+    document.getElementById('close-modal').addEventListener('click', () => modal.classList.remove('open'));
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('open'); });
+
+    window.viewPhoto = function (id) {
+      const record = allAppointments.find(i => String(i.id) === String(id));
+      if (record && record.prescriptionImage) {
+        modalImg.src = record.prescriptionImage;
+        modal.classList.add('open');
+      }
+    };
+
+    // Filter listeners
     document.getElementById('search').addEventListener('input', renderTable);
     document.getElementById('dept-filter').addEventListener('change', renderTable);
+    document.getElementById('date-filter').addEventListener('change', renderTable);
+    document.getElementById('clear-filters').addEventListener('click', () => {
+      document.getElementById('search').value = '';
+      document.getElementById('dept-filter').value = '';
+      document.getElementById('date-filter').value = '';
+      renderTable();
+    });
 
+    // Sorting
     document.getElementById('col-name').addEventListener('click', () => {
       sortDirection *= -1;
       allAppointments.sort((a,b) => (a.patientName||'').localeCompare(b.patientName||'') * sortDirection);
       renderTable();
     });
-
     document.getElementById('col-dept').addEventListener('click', () => {
       sortDirection *= -1;
       allAppointments.sort((a,b) => (a.department||'').localeCompare(b.department||'') * sortDirection);
       renderTable();
     });
-
     document.getElementById('col-date').addEventListener('click', () => {
       sortDirection *= -1;
-      allAppointments.sort((a,b) => (a.date||'').localeCompare(b.date||'') * sortDirection);
+      allAppointments.sort((a,b) => `${a.date} ${a.time||''}`.localeCompare(`${b.date} ${b.time||''}`) * sortDirection);
       renderTable();
     });
 

@@ -20,33 +20,36 @@
         <li><a href="dashboard.html">Dashboard</a></li>
         <li><a href="book.html" aria-current="page">Book Appointment</a></li>
         <li><a href="list.html">View Appointments</a></li>
+        <li><button type="button" id="theme-btn" class="a11y-btn" title="Toggle High Contrast / Dark Mode">🌓 Contrast</button></li>
+        <li><button type="button" id="font-btn" class="a11y-btn" title="Toggle Larger Text Size">A+ Text</button></li>
       </ul>
     </nav>
   </header>
 
   <main id="main-content">
-    <div class="card" style="max-width: 650px;">
+    <div class="card" style="max-width: 700px;">
       <h1>Book an Appointment</h1>
       <p class="subtitle">Fill out the patient details below.</p>
 
       <div id="alert-box" class="alert" role="status" aria-live="polite"></div>
 
       <form id="appointment-form">
-        <div class="form-group">
-          <label for="patientName">Patient Full Name</label>
-          <input type="text" id="patientName" required>
-        </div>
-
-        <div class="form-group">
-          <label for="phone">Phone Number</label>
-          <input 
-            type="tel" 
-            id="phone" 
-            required 
-            placeholder="e.g. 07123456789" 
-            inputmode="numeric"
-            pattern="[0-9]+"
-            title="Please enter numbers only">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="patientName">Patient Full Name</label>
+            <input type="text" id="patientName" required placeholder="e.g. Ahmed Ali">
+          </div>
+          <div class="form-group">
+            <label for="phone">Phone Number</label>
+            <input 
+              type="tel" 
+              id="phone" 
+              required 
+              placeholder="e.g. 01012345678" 
+              inputmode="numeric"
+              pattern="[0-9]+"
+              title="Please enter numbers only">
+          </div>
         </div>
 
         <div class="form-group">
@@ -57,17 +60,44 @@
             <option value="Dental">Dental</option>
             <option value="Cardiology">Cardiology</option>
             <option value="Pediatrics">Pediatrics</option>
+            <option value="Orthopedics">Orthopedics</option>
           </select>
         </div>
 
-        <div class="form-group">
-          <label for="date">Appointment Date</label>
-          <div class="date-wrapper" id="date-box-wrapper">
-            <input type="date" id="date" required>
-            <div class="date-trigger" id="date-click-overlay" title="Click to choose date"></div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="date">Appointment Date</label>
+            <div class="date-wrapper" id="date-box-wrapper">
+              <input type="date" id="date" required>
+              <div class="date-trigger" id="date-click-overlay" title="Click to choose date"></div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="time">Appointment Time</label>
+            <input type="time" id="time" required value="10:00">
           </div>
         </div>
 
+        <!-- Chronic Illness Feature (مرض مزمن) -->
+        <div class="form-group">
+          <label class="checkbox-row" for="hasChronic">
+            <input type="checkbox" id="hasChronic">
+            <span>Patient has a Chronic Condition? (حالة مرض مزمن)</span>
+          </label>
+
+          <div id="chronic-box" aria-live="polite">
+            <label for="chronicType">Select Chronic Condition</label>
+            <select id="chronicType">
+              <option value="Diabetes (السكري)">Diabetes (السكري)</option>
+              <option value="Hypertension (ضغط الدم)">Hypertension (ضغط الدم)</option>
+              <option value="Asthma (الربو)">Asthma (الربو)</option>
+              <option value="Cardiac / Heart (أمراض القلب)">Cardiac / Heart (أمراض القلب)</option>
+              <option value="Other Chronic Condition">Other Chronic Condition</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Prescription & Photo Attachment Feature -->
         <div class="form-group">
           <label class="checkbox-row" for="hasPrescription">
             <input type="checkbox" id="hasPrescription">
@@ -76,13 +106,19 @@
 
           <div id="prescription-box" aria-live="polite">
             <label for="prescriptionDetails">Medication & Dosage Notes</label>
-            <textarea id="prescriptionDetails" rows="2" placeholder="e.g. Amoxicillin 500mg, 3 times a day"></textarea>
+            <textarea id="prescriptionDetails" rows="2" placeholder="e.g. Amoxicillin 500mg, 3 times daily"></textarea>
+
+            <div style="margin-top: 0.75rem;">
+              <label for="prescriptionPhoto">Or Upload Prescription Image (صورة الروشتة)</label>
+              <input type="file" id="prescriptionPhoto" accept="image/*">
+              <span id="photo-preview-msg" style="font-size:0.8rem; color:var(--text-muted); display:block; margin-top:0.25rem;"></span>
+            </div>
           </div>
         </div>
 
         <div class="form-group">
           <label for="notes">General Visit Notes (Optional)</label>
-          <textarea id="notes" rows="3" placeholder="Any symptoms or patient notes..."></textarea>
+          <textarea id="notes" rows="2" placeholder="Any additional symptoms or notes..."></textarea>
         </div>
 
         <button type="submit" class="btn" id="save-btn">Save Appointment</button>
@@ -95,11 +131,31 @@
       window.location.href = 'login.html';
     }
 
+    // Accessibility Theme Toggles
+    const themeBtn = document.getElementById('theme-btn');
+    const fontBtn = document.getElementById('font-btn');
+
+    if (localStorage.getItem('theme_dark') === 'true') document.body.classList.add('dark-mode');
+    if (localStorage.getItem('theme_large') === 'true') document.body.classList.add('large-text');
+
+    themeBtn.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      localStorage.setItem('theme_dark', document.body.classList.contains('dark-mode'));
+    });
+    fontBtn.addEventListener('click', () => {
+      document.body.classList.toggle('large-text');
+      localStorage.setItem('theme_large', document.body.classList.contains('large-text'));
+    });
+
     const phoneInput = document.getElementById('phone');
     const dateInput = document.getElementById('date');
     const overlay = document.getElementById('date-click-overlay');
-    const check = document.getElementById('hasPrescription');
-    const box = document.getElementById('prescription-box');
+    const checkPrescription = document.getElementById('hasPrescription');
+    const boxPrescription = document.getElementById('prescription-box');
+    const checkChronic = document.getElementById('hasChronic');
+    const boxChronic = document.getElementById('chronic-box');
+    const photoInput = document.getElementById('prescriptionPhoto');
+    const photoMsg = document.getElementById('photo-preview-msg');
     const form = document.getElementById('appointment-form');
     const alertBox = document.getElementById('alert-box');
 
@@ -107,6 +163,7 @@
       this.value = this.value.replace(/[^0-9]/g, '');
     });
 
+    // Toggle date picker
     let isCalendarOpen = false;
     overlay.addEventListener('click', function () {
       if (!isCalendarOpen) {
@@ -121,12 +178,37 @@
         isCalendarOpen = false;
       }
     });
-
     dateInput.addEventListener('change', () => { isCalendarOpen = false; });
     dateInput.addEventListener('blur', () => { setTimeout(() => { isCalendarOpen = false; }, 200); });
 
-    check.addEventListener('change', () => {
-      box.style.display = check.checked ? 'block' : 'none';
+    // Dynamic visibility toggles
+    checkPrescription.addEventListener('change', () => {
+      boxPrescription.style.display = checkPrescription.checked ? 'block' : 'none';
+    });
+    checkChronic.addEventListener('change', () => {
+      boxChronic.style.display = checkChronic.checked ? 'block' : 'none';
+    });
+
+    // Handle Image Attachment to base64
+    let attachedImageData = "";
+    photoInput.addEventListener('change', function () {
+      const file = this.files[0];
+      if (file) {
+        if (file.size > 2 * 1024 * 1024) {
+          alert('Image size should be under 2MB.');
+          this.value = '';
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          attachedImageData = e.target.result;
+          photoMsg.textContent = `✓ Selected: ${file.name}`;
+        };
+        reader.readAsDataURL(file);
+      } else {
+        attachedImageData = "";
+        photoMsg.textContent = "";
+      }
     });
 
     form.addEventListener('submit', (e) => {
@@ -139,8 +221,12 @@
         phone: phoneInput.value.trim(),
         department: document.getElementById('department').value,
         date: dateInput.value,
-        hasPrescription: check.checked,
+        time: document.getElementById('time').value,
+        hasChronic: checkChronic.checked,
+        chronicCondition: checkChronic.checked ? document.getElementById('chronicType').value : 'None',
+        hasPrescription: checkPrescription.checked,
         prescriptionDetails: document.getElementById('prescriptionDetails').value.trim(),
+        prescriptionImage: attachedImageData,
         notes: document.getElementById('notes').value.trim()
       };
 
@@ -152,7 +238,10 @@
       alertBox.textContent = 'Appointment booked successfully!';
       alertBox.style.display = 'block';
       form.reset();
-      box.style.display = 'none';
+      boxPrescription.style.display = 'none';
+      boxChronic.style.display = 'none';
+      attachedImageData = "";
+      photoMsg.textContent = "";
     });
   </script>
 </body>
