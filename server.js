@@ -7,7 +7,17 @@ const PORT = process.env.PORT || 3000;
 const FILE_PATH = path.join(__dirname, 'appointments.json');
 
 app.use(express.json());
+
+// Explicitly serve static files
 app.use(express.static(__dirname));
+
+// Explicit page routes
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
+app.get('/login.html', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
+app.get('/dashboard.html', (req, res) => res.sendFile(path.join(__dirname, 'dashboard.html')));
+app.get('/book.html', (req, res) => res.sendFile(path.join(__dirname, 'book.html')));
+app.get('/list.html', (req, res) => res.sendFile(path.join(__dirname, 'list.html')));
+app.get('/style.css', (req, res) => res.sendFile(path.join(__dirname, 'style.css')));
 
 // Read appointments
 function getAppointments() {
@@ -37,18 +47,18 @@ function getAppointments() {
     try { fs.writeFileSync(FILE_PATH, JSON.stringify(defaultData, null, 2)); } catch(e){}
     return defaultData;
   }
-  return JSON.parse(fs.readFileSync(FILE_PATH, 'utf8'));
+  try {
+    return JSON.parse(fs.readFileSync(FILE_PATH, 'utf8'));
+  } catch(e) {
+    return [];
+  }
 }
 
 function saveAppointments(data) {
   try { fs.writeFileSync(FILE_PATH, JSON.stringify(data, null, 2)); } catch(e){}
 }
 
-// Routes
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'login.html'));
-});
-
+// API Routes
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
   if (username === 'admin' && password === '1234') {
@@ -89,5 +99,4 @@ if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => console.log(`Running on port ${PORT}`));
 }
 
-// Export for Vercel serverless
 module.exports = app;
