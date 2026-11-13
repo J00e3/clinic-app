@@ -74,7 +74,7 @@
           </tr>
         </thead>
         <tbody id="table-body">
-          <tr><td colspan="7" style="text-align:center; padding:2rem; color:var(--text-muted);">Loading live database...</td></tr>
+          <tr><td colspan="7" style="text-align:center; padding:2rem; color:var(--text-muted);">Loading appointments...</td></tr>
         </tbody>
       </table>
     </div>
@@ -96,9 +96,6 @@
       window.location.href = 'login.html';
     }
 
-    const CLOUD_DB_URL = 'https://kvdb.io/4yM8EsqV9q15pkm84L3HwG/clinic_appointments';
-
-    // Theme toggles
     const themeBtn = document.getElementById('theme-btn');
     const fontBtn = document.getElementById('font-btn');
 
@@ -124,18 +121,20 @@
 
     async function loadData() {
       try {
-        const res = await fetch(CLOUD_DB_URL);
+        const res = await fetch('/api/appointments');
         if (res.ok) {
-          const cloudData = await res.json();
-          if (Array.isArray(cloudData)) {
-            allAppointments = cloudData;
-            localStorage.setItem('clinic_records', JSON.stringify(cloudData));
+          const apiData = await res.json();
+          if (Array.isArray(apiData) && apiData.length > 0) {
+            allAppointments = apiData;
+            localStorage.setItem('clinic_records', JSON.stringify(apiData));
+            renderTable();
+            return;
           }
         }
-      } catch (err) {
-        // Fallback to local
-        allAppointments = JSON.parse(localStorage.getItem('clinic_records') || '[]');
-      }
+      } catch (err) {}
+
+      // Fallback
+      allAppointments = JSON.parse(localStorage.getItem('clinic_records') || '[]');
       renderTable();
     }
 
@@ -157,7 +156,7 @@
       tbody.innerHTML = '';
 
       if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:2rem; color:var(--text-muted);">No matching appointments found.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:2rem; color:var(--text-muted);">No appointments found. Click "Book Appointment" to add one!</td></tr>';
         return;
       }
 
@@ -205,14 +204,10 @@
       allAppointments = allAppointments.filter(i => i.id !== id);
       renderTable();
 
-      // Sync deletion to cloud database
       try {
-        await fetch(CLOUD_DB_URL, {
-          method: 'POST',
-          body: JSON.stringify(allAppointments)
-        });
-        localStorage.setItem('clinic_records', JSON.stringify(allAppointments));
+        await fetch(`/api/appointments/${id}`, { method: 'DELETE' });
       } catch(e) {}
+      localStorage.setItem('clinic_records', JSON.stringify(allAppointments));
     }
 
     // Modal
