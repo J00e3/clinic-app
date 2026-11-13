@@ -21,15 +21,16 @@ body {
   background-color: var(--bg);
   line-height: 1.6;
   padding: 0;
+  overflow-x: hidden;
 }
 
-/* Accessibility: High-contrast focus outline */
+/* Accessibility Focus */
 :focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
 
-/* Skip link for screen readers */
+/* Skip link */
 .skip-link {
   position: absolute;
   top: -100px;
@@ -42,11 +43,11 @@ body {
 }
 .skip-link:focus { top: 10px; }
 
-/* Navigation Bar */
+/* Responsive Navigation Bar */
 header {
   background: var(--primary);
   color: var(--white);
-  padding: 1rem 2rem;
+  padding: 0.75rem 1rem;
 }
 nav {
   display: flex;
@@ -54,15 +55,30 @@ nav {
   align-items: center;
   max-width: 1000px;
   margin: 0 auto;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
-.logo { font-size: 1.4rem; font-weight: bold; color: var(--white); text-decoration: none; }
-nav ul { list-style: none; display: flex; gap: 1rem; }
+.logo { 
+  font-size: 1.3rem; 
+  font-weight: bold; 
+  color: var(--white); 
+  text-decoration: none; 
+}
+nav ul { 
+  list-style: none; 
+  display: flex; 
+  gap: 0.4rem; 
+  flex-wrap: wrap;
+  align-items: center;
+}
 nav a {
   color: var(--white);
   text-decoration: none;
   font-weight: 600;
-  padding: 0.5rem 0.75rem;
+  padding: 0.4rem 0.6rem;
   border-radius: 4px;
+  font-size: 0.9rem;
+  display: inline-block;
 }
 nav a:hover, nav a[aria-current="page"] {
   background: rgba(255, 255, 255, 0.2);
@@ -71,20 +87,21 @@ nav a:hover, nav a[aria-current="page"] {
 /* Container */
 main {
   max-width: 1000px;
-  margin: 2rem auto;
+  margin: 1.5rem auto;
   padding: 0 1rem;
 }
 
 .card {
   background: var(--white);
-  padding: 2rem;
+  padding: 1.5rem;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+  width: 100%;
 }
 
-h1 { font-size: 1.8rem; margin-bottom: 0.5rem; color: var(--primary); }
-p.subtitle { color: #555; margin-bottom: 1.5rem; }
+h1 { font-size: 1.6rem; margin-bottom: 0.5rem; color: var(--primary); }
+p.subtitle { color: #555; margin-bottom: 1.25rem; font-size: 0.95rem; }
 
 /* Form Fields */
 .form-group {
@@ -109,18 +126,11 @@ textarea {
   font-family: inherit;
 }
 
-/* Normal visible calendar icon + pointer cursor */
-input[type="date"] {
-  cursor: pointer;
-}
-input[type="date"]::-webkit-calendar-picker-indicator {
-  cursor: pointer;
-}
-
 input[type="checkbox"] {
   width: 20px;
   height: 20px;
   cursor: pointer;
+  flex-shrink: 0;
 }
 .checkbox-row {
   display: flex;
@@ -141,6 +151,7 @@ input[type="checkbox"] {
   font-weight: 600;
   cursor: pointer;
   text-decoration: none;
+  text-align: center;
 }
 .btn:hover { background: var(--primary-hover); }
 .btn-secondary {
@@ -174,14 +185,17 @@ input[type="checkbox"] {
   border: 1px solid var(--success);
 }
 
-/* Table */
+/* Table Responsive wrapper */
 table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 1rem;
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
 }
 th, td {
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 0.9rem;
   text-align: left;
   border-bottom: 1px solid var(--border);
 }
@@ -206,14 +220,40 @@ tr:hover { background: #f8fafc; }
 /* Dashboard Cards */
 .dash-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1.5rem;
-  margin-top: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.25rem;
 }
 .stat-box {
   background: #e0f2fe;
   border-left: 5px solid var(--primary);
-  padding: 1.5rem;
+  padding: 1.25rem;
   border-radius: 6px;
 }
-.stat-num { font-size: 2.2rem; font-weight: bold; color: var(--primary); }
+.stat-num { font-size: 2rem; font-weight: bold; color: var(--primary); }
+
+/* MOBILE SPECIFIC BREAKPOINT */
+@media (max-width: 600px) {
+  nav {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  nav ul {
+    width: 100%;
+    justify-content: space-between;
+    padding-top: 0.4rem;
+  }
+  nav a {
+    padding: 0.35rem 0.5rem;
+    font-size: 0.82rem;
+  }
+  .card {
+    padding: 1.25rem 1rem;
+  }
+  h1 {
+    font-size: 1.4rem;
+  }
+  .btn {
+    width: 100%;
+  }
+}
