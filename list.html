@@ -25,7 +25,6 @@
       <h1>Appointments List</h1>
       <p class="subtitle">Search, sort, and manage patient records.</p>
 
-      <!-- Filter Controls -->
       <div style="display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem;">
         <div style="flex:1; min-width:200px;">
           <label for="search">Search by patient name</label>
@@ -45,7 +44,6 @@
 
       <p id="counter" aria-live="polite" style="font-weight:600; color:#555;"></p>
 
-      <!-- Accessible Table -->
       <table aria-label="Patient Appointments Table">
         <thead>
           <tr>
@@ -58,7 +56,6 @@
           </tr>
         </thead>
         <tbody id="table-body">
-          <!-- Loaded via JS -->
         </tbody>
       </table>
     </div>
@@ -72,43 +69,8 @@
     let allAppointments = [];
     let sortDirection = 1;
 
-    // Default sample appointments if empty
-    const defaultData = [
-      {
-        id: 1,
-        patientName: "Sarah Ahmed",
-        phone: "07123456789",
-        department: "General Medicine",
-        date: "2026-11-20",
-        hasPrescription: true,
-        prescriptionDetails: "Paracetamol 500mg, twice daily"
-      },
-      {
-        id: 2,
-        patientName: "Omar Khaled",
-        phone: "07987654321",
-        department: "Dental",
-        date: "2026-11-22",
-        hasPrescription: false,
-        prescriptionDetails: "None"
-      }
-    ];
-
-    async function loadData() {
-      try {
-        const res = await fetch('/api/appointments');
-        if (!res.ok) throw new Error('API failed');
-        allAppointments = await res.json();
-      } catch (err) {
-        // Fallback for offline testing
-        let local = localStorage.getItem('appointments');
-        if (!local) {
-          localStorage.setItem('appointments', JSON.stringify(defaultData));
-          allAppointments = defaultData;
-        } else {
-          allAppointments = JSON.parse(local);
-        }
-      }
+    function loadData() {
+      allAppointments = JSON.parse(localStorage.getItem('clinic_records') || '[]');
       renderTable();
     }
 
@@ -128,7 +90,7 @@
       tbody.innerHTML = '';
 
       if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem;">No matching appointments found.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem; color:#64748b;">No appointments found. Click "Book Appointment" to add one!</td></tr>';
         return;
       }
 
@@ -148,22 +110,16 @@
       });
     }
 
-    async function deleteItem(id) {
+    function deleteItem(id) {
       if (!confirm('Are you sure you want to cancel this appointment?')) return;
-      try {
-        await fetch(`/api/appointments/${id}`, { method: 'DELETE' });
-      } catch (e) {}
-
       allAppointments = allAppointments.filter(i => i.id !== id);
-      localStorage.setItem('appointments', JSON.stringify(allAppointments));
+      localStorage.setItem('clinic_records', JSON.stringify(allAppointments));
       renderTable();
     }
 
-    // Search and filter listeners
     document.getElementById('search').addEventListener('input', renderTable);
     document.getElementById('dept-filter').addEventListener('change', renderTable);
 
-    // Sorting
     document.getElementById('col-name').addEventListener('click', () => {
       sortDirection *= -1;
       allAppointments.sort((a,b) => (a.patientName||'').localeCompare(b.patientName||'') * sortDirection);
