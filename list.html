@@ -11,13 +11,18 @@
 
   <header role="banner">
     <nav aria-label="Main Navigation">
-      <a href="dashboard.html" class="logo">Clinic Portal</a>
+      <div class="nav-top-row">
+        <a href="dashboard.html" class="logo">Clinic Portal</a>
+        <div style="display:flex; gap:0.4rem; align-items:center;">
+          <button type="button" id="theme-btn" class="a11y-btn" title="Toggle High Contrast / Dark Mode">🌓 Contrast</button>
+          <button type="button" id="font-btn" class="a11y-btn" title="Toggle Larger Text Size">A+ Text</button>
+          <button type="button" id="logout-btn" class="btn-logout">Sign Out</button>
+        </div>
+      </div>
       <ul>
         <li><a href="dashboard.html">Dashboard</a></li>
         <li><a href="book.html">Book Appointment</a></li>
         <li><a href="list.html" aria-current="page">View Appointments</a></li>
-        <li><button type="button" id="theme-btn" class="a11y-btn" title="Toggle High Contrast / Dark Mode">🌓 Contrast</button></li>
-        <li><button type="button" id="font-btn" class="a11y-btn" title="Toggle Larger Text Size">A+ Text</button></li>
       </ul>
     </nav>
   </header>
@@ -28,7 +33,7 @@
       <p class="subtitle">Search, filter by date & time, and manage patient records.</p>
 
       <!-- Advanced Filter Controls -->
-      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:0.75rem; margin-bottom:1.25rem;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:0.75rem; margin-bottom:1.25rem;">
         <div>
           <label for="search">Search Patient Name</label>
           <input type="text" id="search" placeholder="Type to search...">
@@ -68,7 +73,9 @@
             <th scope="col">Actions</th>
           </tr>
         </thead>
-        <tbody id="table-body"></tbody>
+        <tbody id="table-body">
+          <tr><td colspan="7" style="text-align:center; padding:2rem; color:var(--text-muted);">Loading live database...</td></tr>
+        </tbody>
       </table>
     </div>
   </main>
@@ -89,7 +96,9 @@
       window.location.href = 'login.html';
     }
 
-    // Accessibility Theme Toggles
+    const CLOUD_DB_URL = 'https://kvdb.io/4yM8EsqV9q15pkm84L3HwG/clinic_appointments';
+
+    // Theme toggles
     const themeBtn = document.getElementById('theme-btn');
     const fontBtn = document.getElementById('font-btn');
 
@@ -105,11 +114,28 @@
       localStorage.setItem('theme_large', document.body.classList.contains('large-text'));
     });
 
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      sessionStorage.removeItem('isLoggedIn');
+      window.location.href = 'login.html';
+    });
+
     let allAppointments = [];
     let sortDirection = 1;
 
-    function loadData() {
-      allAppointments = JSON.parse(localStorage.getItem('clinic_records') || '[]');
+    async function loadData() {
+      try {
+        const res = await fetch(CLOUD_DB_URL);
+        if (res.ok) {
+          const cloudData = await res.json();
+          if (Array.isArray(cloudData)) {
+            allAppointments = cloudData;
+            localStorage.setItem('clinic_records', JSON.stringify(cloudData));
+          }
+        }
+      } catch (err) {
+        // Fallback to local
+        allAppointments = JSON.parse(localStorage.getItem('clinic_records') || '[]');
+      }
       renderTable();
     }
 
@@ -138,12 +164,10 @@
       filtered.forEach(item => {
         const tr = document.createElement('tr');
         
-        // Chronic condition badge
         const chronicHtml = item.hasChronic && item.chronicCondition !== 'None'
           ? `<span class="badge badge-chronic">⚡ ${escapeHtml(item.chronicCondition)}</span>`
           : `<span style="color:var(--text-muted);">None</span>`;
 
-        // Prescription & Image button
         let rxHtml = item.hasPrescription && item.prescriptionDetails 
           ? escapeHtml(item.prescriptionDetails) 
           : `<span style="color:var(--text-muted);">None</span>`;
@@ -176,14 +200,22 @@
       });
     }
 
-    function deleteItem(id) {
+    async function deleteItem(id) {
       if (!confirm('Are you sure you want to cancel this appointment?')) return;
       allAppointments = allAppointments.filter(i => i.id !== id);
-      localStorage.setItem('clinic_records', JSON.stringify(allAppointments));
       renderTable();
+
+      // Sync deletion to cloud database
+      try {
+        await fetch(CLOUD_DB_URL, {
+          method: 'POST',
+          body: JSON.stringify(allAppointments)
+        });
+        localStorage.setItem('clinic_records', JSON.stringify(allAppointments));
+      } catch(e) {}
     }
 
-    // Photo viewer modal
+    // Modal
     const modal = document.getElementById('img-modal');
     const modalImg = document.getElementById('modal-img');
     document.getElementById('close-modal').addEventListener('click', () => modal.classList.remove('open'));

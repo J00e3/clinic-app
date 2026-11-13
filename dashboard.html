@@ -55,6 +55,8 @@
       window.location.href = 'login.html';
     }
 
+    const CLOUD_DB_URL = 'https://kvdb.io/4yM8EsqV9q15pkm84L3HwG/clinic_appointments';
+
     const themeBtn = document.getElementById('theme-btn');
     const fontBtn = document.getElementById('font-btn');
 
@@ -75,8 +77,18 @@
       window.location.href = 'login.html';
     });
 
-    const records = JSON.parse(localStorage.getItem('clinic_records') || '[]');
-    document.getElementById('total-count').textContent = records.length;
+    // Fetch live count from cloud
+    fetch(CLOUD_DB_URL)
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          document.getElementById('total-count').textContent = data.length;
+        }
+      })
+      .catch(() => {
+        const records = JSON.parse(localStorage.getItem('clinic_records') || '[]');
+        document.getElementById('total-count').textContent = records.length;
+      });
   </script>
 </body>
 </html>

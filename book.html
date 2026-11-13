@@ -15,13 +15,18 @@
 
   <header role="banner">
     <nav aria-label="Main Navigation">
-      <a href="dashboard.html" class="logo">Clinic Portal</a>
+      <div class="nav-top-row">
+        <a href="dashboard.html" class="logo">Clinic Portal</a>
+        <div style="display:flex; gap:0.4rem; align-items:center;">
+          <button type="button" id="theme-btn" class="a11y-btn" title="Toggle High Contrast / Dark Mode">🌓 Contrast</button>
+          <button type="button" id="font-btn" class="a11y-btn" title="Toggle Larger Text Size">A+ Text</button>
+          <button type="button" id="logout-btn" class="btn-logout">Sign Out</button>
+        </div>
+      </div>
       <ul>
         <li><a href="dashboard.html">Dashboard</a></li>
         <li><a href="book.html" aria-current="page">Book Appointment</a></li>
         <li><a href="list.html">View Appointments</a></li>
-        <li><button type="button" id="theme-btn" class="a11y-btn" title="Toggle High Contrast / Dark Mode">🌓 Contrast</button></li>
-        <li><button type="button" id="font-btn" class="a11y-btn" title="Toggle Larger Text Size">A+ Text</button></li>
       </ul>
     </nav>
   </header>
@@ -78,7 +83,7 @@
           </div>
         </div>
 
-        <!-- Chronic Illness Feature (مرض مزمن) -->
+        <!-- Chronic Illness Feature -->
         <div class="form-group">
           <label class="checkbox-row" for="hasChronic">
             <input type="checkbox" id="hasChronic">
@@ -131,7 +136,10 @@
       window.location.href = 'login.html';
     }
 
-    // Accessibility Theme Toggles
+    // Shared Cloud Database Bucket Key (Unique to your clinic app)
+    const CLOUD_DB_URL = 'https://kvdb.io/4yM8EsqV9q15pkm84L3HwG/clinic_appointments';
+
+    // Theme toggles
     const themeBtn = document.getElementById('theme-btn');
     const fontBtn = document.getElementById('font-btn');
 
@@ -147,6 +155,11 @@
       localStorage.setItem('theme_large', document.body.classList.contains('large-text'));
     });
 
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      sessionStorage.removeItem('isLoggedIn');
+      window.location.href = 'login.html';
+    });
+
     const phoneInput = document.getElementById('phone');
     const dateInput = document.getElementById('date');
     const overlay = document.getElementById('date-click-overlay');
@@ -157,13 +170,13 @@
     const photoInput = document.getElementById('prescriptionPhoto');
     const photoMsg = document.getElementById('photo-preview-msg');
     const form = document.getElementById('appointment-form');
+    const saveBtn = document.getElementById('save-btn');
     const alertBox = document.getElementById('alert-box');
 
     phoneInput.addEventListener('input', function () {
       this.value = this.value.replace(/[^0-9]/g, '');
     });
 
-    // Toggle date picker
     let isCalendarOpen = false;
     overlay.addEventListener('click', function () {
       if (!isCalendarOpen) {
@@ -181,7 +194,6 @@
     dateInput.addEventListener('change', () => { isCalendarOpen = false; });
     dateInput.addEventListener('blur', () => { setTimeout(() => { isCalendarOpen = false; }, 200); });
 
-    // Dynamic visibility toggles
     checkPrescription.addEventListener('change', () => {
       boxPrescription.style.display = checkPrescription.checked ? 'block' : 'none';
     });
@@ -189,13 +201,12 @@
       boxChronic.style.display = checkChronic.checked ? 'block' : 'none';
     });
 
-    // Handle Image Attachment to base64
     let attachedImageData = "";
     photoInput.addEventListener('change', function () {
       const file = this.files[0];
       if (file) {
-        if (file.size > 2 * 1024 * 1024) {
-          alert('Image size should be under 2MB.');
+        if (file.size > 1024 * 1024) {
+          alert('Image size should be under 1MB.');
           this.value = '';
           return;
         }
@@ -211,9 +222,11 @@
       }
     });
 
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
       alertBox.style.display = 'none';
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving to database...';
 
       const payload = {
         id: Date.now(),
@@ -230,18 +243,42 @@
         notes: document.getElementById('notes').value.trim()
       };
 
-      let list = JSON.parse(localStorage.getItem('clinic_records') || '[]');
-      list.push(payload);
-      localStorage.setItem('clinic_records', JSON.stringify(list));
+      try {
+        // Fetch current cloud list
+        let currentList = [];
+        try {
+          const res = await fetch(CLOUD_DB_URL);
+          if (res.ok) currentList = await res.json();
+        } catch (err) {}
 
-      alertBox.className = 'alert alert-success';
-      alertBox.textContent = 'Appointment booked successfully!';
-      alertBox.style.display = 'block';
-      form.reset();
-      boxPrescription.style.display = 'none';
-      boxChronic.style.display = 'none';
-      attachedImageData = "";
-      photoMsg.textContent = "";
+        if (!Array.isArray(currentList)) currentList = [];
+        currentList.push(payload);
+
+        // Save updated list to Cloud Database
+        await fetch(CLOUD_DB_URL, {
+          method: 'POST',
+          body: JSON.stringify(currentList)
+        });
+
+        // Also save to localStorage as backup
+        localStorage.setItem('clinic_records', JSON.stringify(currentList));
+
+        alertBox.className = 'alert alert-success';
+        alertBox.textContent = 'Appointment booked and synced to live database!';
+        alertBox.style.display = 'block';
+        form.reset();
+        boxPrescription.style.display = 'none';
+        boxChronic.style.display = 'none';
+        attachedImageData = "";
+        photoMsg.textContent = "";
+      } catch (err) {
+        alertBox.className = 'alert alert-error';
+        alertBox.textContent = 'Failed to save appointment. Please try again.';
+        alertBox.style.display = 'block';
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Appointment';
+      }
     });
   </script>
 </body>
